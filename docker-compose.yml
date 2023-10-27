@@ -1,0 +1,55 @@
+version: '3.3'
+
+services:
+
+  loan:
+    image: loan-service:latest
+    build:
+      context: ./loan-details-service
+    command: npm run start:dev
+    volumes:
+      - ./loan-details-service/src:/usr/app/src
+    ports:
+      - "3001:3001"
+    depends_on:
+      - loan_mongo
+    environment:
+      - PORT=3001
+      - DB_URL=mongodb://loan_mongo:27017/loans
+    networks:
+      - myloannetwork
+
+  dailydebit:
+    image: dailydebit-service:latest
+    build:
+      context: ./daily-debit-details-service
+    command: npm run start:dev
+    volumes:
+      - ./daily-debit-details-service/src:/usr/app/src
+    ports:
+      - "3002:3002"
+    depends_on:
+      - loan_mongo
+      - loan
+    environment:
+      - PORT=3002
+      - DB_URL=mongodb://loan_mongo:27017/loans
+    networks:
+      - myloannetwork
+
+  loan_mongo:
+    image: mongo:latest
+    volumes:
+      - mongodb_loan:/data/db
+    container_name: mongodb
+    restart: always
+    ports:
+      - '27017:27017'
+    networks:
+      - myloannetwork
+
+volumes:
+  mongodb_loan:
+
+networks:
+  myloannetwork:
